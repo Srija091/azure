@@ -42,6 +42,16 @@
                 background-color: #218838; /* Darker green color on hover */
                 border-color: #218838;
             }
+            .btn-churn-train {
+        background-color: #007bff; /* Bright Blue */
+        border-color: #007bff;
+        color: #fff;
+        }
+    .btn-churn-train:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+       
+    }
         </style>
 
     </head>
@@ -59,6 +69,7 @@
                 <a class="btn btn-custom-dashboard btn-lg me-3 mb-3" href="{{ url_for('dashboard') }}">Dashboard</a>
                 <a class="btn btn-custom-search btn-lg me-3 mb-3" href="{{ url_for('Search')}}">Search Your Data</a>
                 <a class="btn btn-custom-upload btn-lg mb-3" href="{{ url_for('upload')}}">Upload Your Data</a>
+                <a class="btn btn-churn-train btn-lg mb-3" href="{{ url_for('churn')}}">Churn Prediction</a>
             </div>
         </div>
 

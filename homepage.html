@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html> 
+	<head> 
+		<meta charset="UTF-8"> 
+		<title>Login</title> 
+		<style>
+            body {
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #f0f0f0;
+                height: 100vh;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            form {
+                width: 350px;
+                padding: 20px;
+                background-color: #fff;
+                border-radius: 10px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            }
+            h2 {
+                text-align: center;
+                color: #333;
+                margin-bottom: 20px;
+            }
+            input[type="text"],
+            input[type="password"] {
+                width: 100%;
+                padding: 12px;
+                margin: 8px 0;
+                display: inline-block;
+                border: 1px solid #ccc;
+                box-sizing: border-box;
+                border-radius: 5px;
+                font-size: 16px;
+            }
+            .msg {
+                color: #f00;
+                font-size: 14px;
+                margin-bottom: 10px;
+                text-align: center;
+            }
+            .btn {
+                background-color: #4CAF50;
+                color: white;
+                margin: 8px 0;
+                cursor: pointer;
+                padding: 14px 20px;
+                border: none;
+                width: 100%;
+                border-radius: 5px;
+                font-size: 16px;
+                transition: background-color 0.3s ease;
+            }
+            .btn:hover {
+                background-color: #45a049;
+            }
+            .bottom {
+                text-align: center;
+                font-size: 14px;
+                color: #666;
+            }
+            .bottom a {
+                color: #007bff;
+                text-decoration: none;
+            }
+            .bottom a:hover {
+                text-decoration: underline;
+            }
+        </style>		 
+	</head> 
+	<body> 
+		<div class="container"> 
+			<form action="{{ url_for('homepage') }}" method="post"> 
+                <h2>Login</h2>
+                <div class="msg">{{ msg }}</div>
+                <label for="username"><b>Username</b></label>
+                <input id="username" name="username" type="text" placeholder="Enter Your Username" required/><br><br> 
+                <label for="password"><b>Password</b></label>
+                <input id="password" name="password" type="password" placeholder="Enter Your Password" required/><br><br><br> 
+                <input type="submit" class="btn" value="Sign In"><br><br>
+                <p class="bottom">Don't have an account? <a href="{{ url_for('register')}}">Register Here</a></p> 
+			</form> 
+		</div> 
+	</body> 
+</html> 

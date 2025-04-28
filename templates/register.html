@@ -4,24 +4,77 @@
 		<meta charset="UTF-8">
 		<title> Register </title>
 		<!-- Bootstrap CSS -->
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">	</head>
-	<body></br></br></br></br></br>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">	
+        <style>
+            body {
+                background: linear-gradient(to right, #6a11cb, #2575fc);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }
+            .container {
+                background: #ffffff;
+                padding: 40px 30px;
+                border-radius: 15px;
+                box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+                max-width: 400px;
+                width: 100%;
+            }
+            h2 {
+                margin-bottom: 30px;
+                font-weight: bold;
+                color: #333;
+            }
+            .form-control {
+                border-radius: 10px;
+                padding: 12px 20px;
+                font-size: 16px;
+                border: 1px solid #ced4da;
+                transition: 0.3s;
+            }
+            .form-control:focus {
+                border-color: #6a11cb;
+                box-shadow: 0 0 5px rgba(106, 17, 203, 0.5);
+            }
+            .btn-primary {
+                background: #6a11cb;
+                border: none;
+                border-radius: 10px;
+                padding: 12px 20px;
+                font-size: 16px;
+                transition: background 0.3s;
+                width: 100%;
+                margin-top: 10px;
+            }
+            .btn-primary:hover {
+                background: #4e0ecf;
+            }
+            label {
+                margin-bottom: 8px;
+                color: #555;
+                font-weight: 600;
+            }
+        </style>
+	</head>
+	<body>
 		<div align="center" class="container">
 			<h2>Register</h2>
 			<form action="{{ url_for('register') }}" method="post">
 				<div class="form-group">
 					<label for="email"><b>Email ID</b></label>
-					<input id="email" name="email" type="text" placeholder="Enter Your Email ID here" class="form-control" style="border-radius: 30px" required>
+					<input id="email" name="email" type="text" placeholder="Enter Your Email ID here" class="form-control" required>
 				</div>
 				<div class="form-group">
 					<label for="username"><b>Username</b></label>
-					<input id="username" name="username" type="text" placeholder="Enter Your Username here" class="form-control" style="border-radius: 30px" required>
+					<input id="username" name="username" type="text" placeholder="Enter Your Username here" class="form-control" required>
 				</div>
 				<div class="form-group">
 					<label for="password"><b>Password</b></label>
-					<input id="password" name="password" type="password" placeholder="Enter Your Password here" class="form-control" style="border-radius: 30px" required>
+					<input id="password" name="password" type="password" placeholder="Enter Your Password here" class="form-control" required>
 				</div>
-				<button type="submit" class="btn btn-primary" style="border-radius: 30px;">Sign Up</button>
+				<button type="submit" class="btn btn-primary">Sign Up</button>
 			</form>
 		</div>
 		<!-- Bootstrap JS -->

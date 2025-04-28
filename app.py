@@ -7,6 +7,10 @@ from mysql.connector import errorcode
 from flask_session import Session
 from sqlalchemy import create_engine
 import plotly.express as px
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report
+
 
 
 app = Flask(__name__)
@@ -125,7 +129,8 @@ def Search():
         data=cur.fetchmany(1000)
         print("data fetched")
         return render_template('Search.html', data= data)
-    
+
+
 
 @app.route('/dashboard')
 def dashboard():
@@ -190,10 +195,54 @@ def upload():
     else:
         msg="unable to insert data"
         return render_template("upload.html")
-    
+@app.route('/churn')
+def churn():
+    query = """
+    SELECT hshd_num, COUNT(DISTINCT basket_num) AS frequency,
+           SUM(spend) AS total_spent,
+           MAX(purchase_) AS last_purchase
+    FROM transactions
+    GROUP BY hshd_num
+    HAVING total_spent > 0
+    """
+    conn = mysql.connector.connect(**config)
+    cur = conn.cursor()
+
+    cur.execute(query)
+    result = cur.fetchall()
+    columns = [desc[0] for desc in cur.description]
+    df = pd.DataFrame(result, columns=columns)
+
+    cur.close()
+    conn.close()
+
+    if df.shape[0] < 10:
+        return "<h4>⚠️ Not enough data to train churn model. At least 10 records needed.</h4>"
+
+    df['last_purchase'] = pd.to_datetime(df['last_purchase'])
+    max_date = df['last_purchase'].max()
+    df['days_since'] = (max_date - df['last_purchase']).dt.days
+
+    threshold = df['days_since'].quantile(0.75)
+    df['churn'] = df['days_since'] > threshold
+
+    X = df[['frequency', 'total_spent', 'days_since']]
+    y = df['churn']
+
+    if len(y.unique()) < 2:
+        return "<h4>⚠️ Not enough variety in churn labels to train model.</h4>"
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    model = LogisticRegression()
+    model.fit(X_train, y_train)
+
+    report = classification_report(y_test, model.predict(X_test), output_dict=True)
+    return render_template('churn.html', metrics=pd.DataFrame(report).T, test_size=len(y_test), threshold=int(threshold))
+
+
     
 if __name__=="__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0",port=8001)
     
 
 

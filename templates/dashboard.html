@@ -83,11 +83,12 @@
         <h1>📊 Dashboard</h1>
     </div>
     <div>
+       
         <a href="{{ url_for('dashboard') }}">📊 Dashboard</a>
         <a href="{{ url_for('Search') }}">🔍 Search Data</a>
         <a href="{{ url_for('upload') }}">📤 Upload Data</a>
         <a href="{{ url_for('churn') }}">Churn Prediction</a>
-
+        <a href="{{ url_for('predict') }}">Random Forest Prediction</a>
         <a href="{{ url_for('logout') }}" class="btn-logout">🚪 Logout</a>
     </div>
 </nav>

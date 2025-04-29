@@ -52,6 +52,16 @@
         border-color: #0056b3;
        
     }
+    .btn-predict {
+        background-color: #ff6600; /* Bright Blue */
+        border-color: #ff6600;
+        color: #fff;
+        }
+    .btn-predict:hover {
+        background-color: #b35100;
+        border-color: #b35100;
+       
+    }
         </style>
 
     </head>
@@ -70,6 +80,7 @@
                 <a class="btn btn-custom-search btn-lg me-3 mb-3" href="{{ url_for('Search')}}">Search Your Data</a>
                 <a class="btn btn-custom-upload btn-lg mb-3" href="{{ url_for('upload')}}">Upload Your Data</a>
                 <a class="btn btn-churn-train btn-lg mb-3" href="{{ url_for('churn')}}">Churn Prediction</a>
+                <a class="btn btn-predict btn-lg mb-3" href="{{ url_for('predict')}}">Random Forest Prediction</a>
             </div>
         </div>
 

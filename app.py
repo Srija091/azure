@@ -5,11 +5,18 @@ import mysql.connector
 import pandas as pd
 from mysql.connector import errorcode
 from flask_session import Session
+from sklearn.ensemble import RandomForestClassifier
 from sqlalchemy import create_engine
 import plotly.express as px
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, confusion_matrix
+from flask import Flask, render_template
+import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import os
 
 
 
@@ -30,6 +37,28 @@ config = {
 
     'connect_timeout': 50000
 }
+
+
+
+
+def get_data_from_db():
+    conn = mysql.connector.connect(**config)
+    cur = conn.cursor()
+    
+    query = """
+    SELECT h.HSHD_NUM, t.BASKET_NUM, t.PURCHASE_, p.PRODUCT_NUM, p.DEPARTMENT, p.COMMODITY,
+           t.SPEND, t.UNITS, t.STORE_R, t.WEEK_NUM, t.YEAR, h.L, h.AGE_RANGE, h.MARITAL, 
+           h.INCOME_RANGE, h.HOMEOWNER, h.HSHD_COMPOSITION, h.HH_SIZE, h.CHILDREN
+    FROM households AS h
+    JOIN transactions AS t ON h.HSHD_NUM = t.HSHD_NUM
+    JOIN products AS p ON t.PRODUCT_NUM = p.PRODUCT_NUM
+    """
+    
+    cur.execute(query)
+    data = cur.fetchall()
+    conn.close()
+    
+    return data
 
 
 def get_https_url(item,data):
@@ -55,7 +84,124 @@ def homepage():
             # Account doesnt exist
             msg = 'Incorrect username/password!'
     return render_template("homepage.html",msg=msg)
-    
+
+@app.route('/predict', methods=['GET'])
+def predict():
+    try:
+        # 🔗 Connect to MySQL
+        conn = mysql.connector.connect(**config)
+        cur = conn.cursor()
+
+        # 🛒 Fetch transactions table
+        cur.execute("SELECT * FROM transactions")
+        transactions_data = cur.fetchall()
+        transactions_columns = [desc[0] for desc in cur.description]
+        transactions = pd.DataFrame(transactions_data, columns=transactions_columns)
+
+        # 🛒 Fetch products table
+        cur.execute("SELECT * FROM products")
+        products_data = cur.fetchall()
+        products_columns = [desc[0] for desc in cur.description]
+        products = pd.DataFrame(products_data, columns=products_columns)
+
+        cur.close()
+        conn.close()
+
+        # 🛠️ Clean column names
+        transactions.columns = transactions.columns.str.strip()
+        products.columns = products.columns.str.strip()
+
+        if transactions.empty or products.empty:
+            return "<h4>⚠️ No transactions or products data found in database!</h4>"
+
+        # 🛒 Merge transactions with products
+        merged = transactions.merge(products, on='PRODUCT_NUM', how='left')
+
+        if merged.empty:
+            return "<h4>⚠️ Merged data is empty. Check data integrity!</h4>"
+
+        # 🔥 Force SPEND to numeric to avoid type errors
+        merged['SPEND'] = pd.to_numeric(merged['SPEND'], errors='coerce')
+        merged = merged.dropna(subset=['SPEND'])
+
+        if merged.empty:
+            return "<h4>⚠️ Merged data is empty after cleaning SPEND values!</h4>"
+
+        # 📊 Create Basket Data (Pivot Table)
+        basket = merged.pivot_table(index='BASKET_NUM', columns='COMMODITY', values='SPEND', aggfunc='sum', fill_value=0)
+
+        if basket.empty:
+            return "<h4>⚠️ No basket data available after pivot. Please check source tables.</h4>"
+
+        # 🔥 Binarize basket (purchase: 1 / no-purchase: 0)
+        basket = basket.applymap(lambda x: 1 if x > 0 else 0)
+
+        # 🎯 Auto-pick Top Purchased Product
+        product_counts = basket.sum().sort_values(ascending=False)
+        
+        if product_counts.empty:
+            return "<h4>⚠️ No products found to predict.</h4>"
+
+        target_product = product_counts.index[0]
+
+        if target_product not in basket.columns:
+            return "<h4>⚠️ Target product not found in basket data!</h4>"
+
+        # 🧹 Prepare data for ML
+        X = basket.drop(columns=[target_product])
+        y = basket[target_product]
+
+        if len(y.unique()) < 2:
+            return "<h4>⚠️ Not enough variety in target labels to train model.</h4>"
+
+        # 📚 Train-test split
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+        # 🌳 Train Random Forest
+        model = RandomForestClassifier(n_estimators=100, random_state=42)
+        model.fit(X_train, y_train)
+
+        # 📋 Predict & Evaluate
+        y_pred = model.predict(X_test)
+        cm = confusion_matrix(y_test, y_pred)
+        report = classification_report(y_test, y_pred, output_dict=True)
+
+        # 📈 Feature Importance
+        feature_importance = pd.DataFrame({
+            'Product': X.columns,
+            'Importance': model.feature_importances_
+        }).sort_values(by='Importance', ascending=False)
+
+        # 📊 Save Feature Importance Plot
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.barh(feature_importance['Product'][:10][::-1], feature_importance['Importance'][:10][::-1], color='teal')
+        ax.set_xlabel('Importance Score')
+        ax.set_title(f'Top Features Influencing Purchase of {target_product}')
+        plt.tight_layout()
+
+        img_path = os.path.join(app.config['UPLOAD_FOLDER'], 'feature_importance.png')
+        plt.savefig(img_path)
+        plt.close()
+
+        # 🚀 Send results to template
+        return render_template('predict.html',
+                               target_product=target_product,
+                               metrics=pd.DataFrame(report).T,
+                               cm=cm,
+                               feature_plot_path='static/files/feature_importance.png')
+
+    except Exception as e:
+        return f"<h4>⚠️ An error occurred while processing basket prediction:<br><br>{str(e)}</h4>"
+
+       
+
+    except Exception as e:
+        print(f"Prediction error: {e}")
+        return "Prediction failed!"
+
+
+
+
 
 @app.route('/logout')
 def logout():
